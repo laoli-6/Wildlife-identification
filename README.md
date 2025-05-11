@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/ac50c8b4-912c-44be-a4d2-39f24b817d14)#   深度学习的视频中动物识别的系统介绍
+#   深度学习的视频中动物识别的系统介绍
 
 ## 1、模型所需数据结构介绍
 
