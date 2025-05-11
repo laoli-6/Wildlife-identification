@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度学习动物检测系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 全局样式 */
+        body {
+            background-color: #f0f7f4;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Open Sans', sans-serif;
+            overflow-x: hidden;
+            transition: background-color 0.5s ease;
+        }
+
+        /* 容器样式 */
+        .container {
+            display: flex;
+            width: 70%;
+            max-width: 1000px;
+            background: #e0f2e9;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.08);
+            animation: fadeIn 1s ease;
+            position: relative;
+        }
+
+        /* 左侧部分样式 */
+        .left-side {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #c8e6c9;
+            border-radius: 20px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05), 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        /* 左侧部分鼠标悬停效果 */
+        .left-side:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 右侧部分样式 */
+        .right-side {
+            flex: 1;
+            padding: 30px;
+            background: #e0f2e9;
+            border-radius: 20px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05), 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        /* 右侧部分鼠标悬停效果 */
+        .right-side:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 标题样式 */
+        h1 {
+            text-align: center;
+            margin-bottom: 90px; /* 减小标题下方间距，使其距离下边内容更近 */
+            margin-top: -100px; /* 减小标题上方间距，使其距离上边更近 */
+            color: #1e88e5;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            font-size: 55px; /* 加大标题字体大小 */
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #00695c;
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        /* 上传按钮样式 */
+        .btn-upload {
+            background: linear-gradient(45deg, #00c853, #009688);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 20px;
+            transition: 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 200, 83, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 上传按钮图标样式 */
+        .btn-upload i {
+            margin-right: 12px;
+            font-size: 22px;
+        }
+
+        /* 上传按钮悬停效果 */
+        .btn-upload:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 200, 83, 0.5);
+            background: linear-gradient(45deg, #00e676, #00c853);
+        }
+
+        /* 结果图片和视频样式 */
+        #imageResult,
+        #videoResult {
+            max-width: 100%;
+            margin-top: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        /* 结果图片和视频鼠标悬停效果 */
+        #imageResult:hover,
+        #videoResult:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 隐藏样式 */
+        .hidden {
+            display: none;
+        }
+
+        /* 表单样式 */
+        .form-select,
+        .form-control {
+            width: 100%;
+            margin-top: 20px;
+            border: 1px solid #90caf9;
+            background-color: #f0f9ff;
+            color: #333;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 12px;
+        }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-container label {
+            margin-top: 20px;
+            color: #1e88e5;
+            font-weight: 500;
+            font-size: 20px;
+        }
+
+        .form-container button {
+            margin-top: 30px;
+        }
+
+        /* 状态提示样式 */
+        #progressStatus {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 400;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div style="width: 100%">
+        <h1>深度学习动物检测分类系统</h1>
+        <div class="container">
+            <!-- 左侧部分：检测结果 -->
+            <div class="left-side">
+                <h2 class="mt-4">检测结果</h2>
+                <img id="imageResult" class="hidden" alt="检测结果">
+                <video id="videoResult" class="hidden" width="100%" controls>
+                    <source id="videoSource" src="" type="video/mp4">
+                    您的浏览器不支持 HTML5 视频播放。
+                </video>
+            </div>
+
+            <!-- 右侧部分：模型选择和上传 -->
+            <div class="right-side">
+                <!-- 表单 -->
+                <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data"
+                    class="form-container">
+                    <label for="modelSelect">模型选择:</label>
+                    <select name="model" id="modelSelect" class="form-select">
+                        <option value="yolov8s">YOLOv8s（默认，平衡精度和速度，适合大部分应用）</option>
+                        <option value="yolov8n">YOLOv8n（推理速度快，适合边缘设备）</option>
+                        <option value="CNN">CNN（推理速度快，适合照片识别）</option>
+                    </select>
+
+                    <label for="fileInput">选择文件:</label>
+                    <input type="file" name="file" id="fileInput" class="form-control" required>
+
+                    <button type="submit" class="btn btn-upload mt-3">
+                        <i class="fas fa-upload"></i> 上传文件
+                    </button>
+
+                    <!--  状态提示 -->
+                    <div id="progressStatus" class="mt-2 text-warning"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById("uploadForm");
+        const fileInput = document.getElementById("fileInput");
+        const imageResult = document.getElementById("imageResult");
+        const videoResult = document.getElementById("videoResult");
+        const videoSource = document.getElementById("videoSource");
+        const progressStatus = document.getElementById("progressStatus");
+        const uploadBtn = uploadForm.querySelector("button[type='submit']");
+
+        // 图像预览
+        fileInput.addEventListener("change", function () {
+            const file = this.files[0];
+            if (file && file.type.startsWith("image")) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imageResult.src = e.target.result;
+                    imageResult.classList.remove("hidden");
+                    videoResult.classList.add("hidden");
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imageResult.classList.add("hidden");
+            }
+        });
+
+        uploadForm.onsubmit = async function (e) {
+            e.preventDefault();
+
+            let formData = new FormData(uploadForm);
+            let file = fileInput.files[0];
+            if (!file) {
+                alert("请先选择一个文件");
+                return;
+            }
+
+            // 状态提示：识别中
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = "识别中...";
+            progressStatus.textContent = "正在识别，请稍候...";
+            progressStatus.style.setProperty("color", "green", "important");
+            progressStatus.style.fontFamily = 'Open Sans, sans-serif';
+            progressStatus.style.fontSize = '18px';
+            progressStatus.style.fontWeight = '400';
+
+            try {
+                let response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (response.ok) {
+                    let resultUrl = await response.text();
+
+                    if (file.type.startsWith("image")) {
+                        imageResult.src = resultUrl;
+                        imageResult.classList.remove("hidden");
+                        videoResult.classList.add("hidden");
+                    } else if (file.type.startsWith("video")) {
+                        videoSource.src = resultUrl;
+                        videoResult.load();
+                        videoResult.classList.remove("hidden");
+                        imageResult.classList.add("hidden");
+                    }
+
+                    progressStatus.textContent = "识别完成，如果识别不准确请尝试其他模型";
+                    progressStatus.style.setProperty("color", "green", "important");
+                    progressStatus.style.fontFamily = 'Open Sans, sans-serif';
+                    progressStatus.style.fontSize = '18px';
+                    progressStatus.style.fontWeight = '400';
+                } else {
+                    let errorMessage = await response.text();
+                    console.error("识别失败：", errorMessage);
+                    alert("识别失败：" + errorMessage);
+                    progressStatus.textContent = "识别失败 ";
+                    progressStatus.style.setProperty("color", "red", "important");
+                    progressStatus.style.fontFamily = 'Open Sans, sans-serif';
+                    progressStatus.style.fontSize = '18px';
+                    progressStatus.style.fontWeight = '400';
+                }
+            } catch (error) {
+                console.error("请求失败：", error);
+                alert("请求失败，请检查网络连接！");
+                progressStatus.textContent = "请求失败 ";
+                progressStatus.style.color = "red";
+                progressStatus.style.fontFamily = 'Open Sans, sans-serif';
+                progressStatus.style.fontSize = '18px';
+                progressStatus.style.fontWeight = '400';
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = "上传文件";
+            }
+        };
+    </script>
+</body>
+
+</html>
